@@ -56,7 +56,7 @@ function displayNews(articles) {
 
     $("#newsContainer").append(`
       <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm h-100 rounded-3">
           <img src="${image}" class="card-img-top" style="height:200px; object-fit:cover;">
           
           <div class="card-body">
