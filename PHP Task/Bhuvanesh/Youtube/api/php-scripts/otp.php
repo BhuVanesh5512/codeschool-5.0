@@ -11,14 +11,7 @@ $otp = $_POST["otp"];
 
 otp($otp);
 
-if(!empty($errorsArray)) {
-    echo json_encode([
-        "status" => false,
-        "message" => "Validation errors",
-        "data" => $errorsArray
-    ]);
-    exit;
-}
+
 
 $auth = new authController();
 $auth->verifyOtp($otp);

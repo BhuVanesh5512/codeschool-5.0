@@ -1,6 +1,4 @@
 <?php
- 
-require __DIR__ . "/../utils/function.php";
 
 
  function email($email){
@@ -14,14 +12,18 @@ require __DIR__ . "/../utils/function.php";
         }
         }
  }
-    function otp($otp){
-        if (empty($otp)){
-         return  sendResponse(false,"otp is required to fill");
+
+ function password($password){
+     if (empty($password)){
+         return  sendResponse(false,"password Empty");
         }
         else{
-       if (strlen($otp)>6|| strlen($otp)<6) {
-           return sendResponse(false,"Otp must be 6 characters");
+             $passwordRegex =
+      '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%?&])[A-Za-z\d@$!%?&]{5,20}$/';
+       if (!preg_match($passwordRegex, $password)) {
+           return sendResponse(false,"password structure incorrect");
         }
-        }
-    }
+ }
+    
+ }
  

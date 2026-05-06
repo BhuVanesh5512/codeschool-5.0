@@ -134,7 +134,7 @@ class authController{
          $checkQuery = "SELECT * FROM user_tokens ut inner join users u on ut.user_id = u.id  WHERE token = :token AND is_active = TRUE AND expires_at > NOW()";
          $user = $this->db->query($checkQuery)->first([":token"=>$token]);
             if (!$user) {
-            $updateQuery = "UPDATE user_tokens SET is_active = false WHERE token = :temp_token AND expires_at <= NOW()";
+            $updateQuery = "UPDATE user_tokens SET is_active = false WHERE token = :token AND expires_at <= NOW()";
            $updateStatus = $this->db->query($updateQuery)->update([":token" => $token]);
            if(!$updateStatus){
                 sendResponse(false,"DatabaseError! Try again Later");
