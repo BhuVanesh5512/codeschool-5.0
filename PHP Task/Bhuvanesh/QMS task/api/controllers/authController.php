@@ -584,7 +584,7 @@ class authController {
 
     
         $userQuery = "SELECT user_id FROM user_tokens 
-                  WHERE token = :token AND is_active = true & expires_at > NOW()";
+                  WHERE token = :token AND is_active = true AND expires_at > NOW()";
         $user = $this->db->query($userQuery)->first([":token" => $token]);
 
         if (!$user) {

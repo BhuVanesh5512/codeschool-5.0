@@ -1,45 +1,31 @@
 <?php
 require_once __DIR__ . '/../controllers/authController.php';
 
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    sendResponse(false, "Invalid method");
+if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+    return sendResponse(false, "Invalid method");
 }
-
 
 $headers = getallheaders();
-if (!isset($headers['Authorization'])) {
-    sendResponse(false, "Authorization header missing");
-}
-
+if (!isset($headers['Authorization'])) return sendResponse(false, "Authorization header missing");
 $authHeader = $headers['Authorization'];
-if (strpos($authHeader, 'Bearer ') !== 0) {
-    sendResponse(false, "Invalid Authorization format");
-}
+if (strpos($authHeader, 'Bearer ') !== 0) return sendResponse(false, "Invalid Authorization format");
 
 $token = substr($authHeader, 7);
 
-
 $input = json_decode(file_get_contents("php://input"), true);
+if (!$input) return sendResponse(false, "Invalid JSON input");
 
 if (
     !isset($input['quiz_id']) ||
     !isset($input['answers']) ||
     !isset($input['started_at'])
 ) {
-    sendResponse(false, "Missing required fields");
+    return sendResponse(false, "Missing required fields");
 }
 
-$quiz_id   = $input['quiz_id'];
-$answers   = $input['answers'];
-$startedAt = $input['started_at'];
-
-// Validate answers
-if (!is_array($answers)) {
-    sendResponse(false, "Invalid answers format");
+if (!is_array($input['answers'])) {
+    return sendResponse(false, "Invalid answers format");
 }
 
 $data = new authController();
-
-
-$data->submitQuiz($token, $quiz_id, $answers, $startedAt);
+return $data->submitQuiz($token, $input['quiz_id'], $input['answers'], $input['started_at']);
