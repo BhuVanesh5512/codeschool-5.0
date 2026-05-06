@@ -319,49 +319,66 @@ function renderQuestion() {
     </div>
   `;
 
-  q.options.forEach((opt) => {
-    html += `
-      <div>
-        <input type="radio" name="question"
-          value="${opt.option_id}">
-        ${opt.option_text}
-      </div>
-    `;
-  });
+q.options.forEach((opt) => {
+  html += `
+    <div>
+      <input type="radio" name="question${q.id}"
+        value="${opt.option_id}"
+        data-question="${q.id}">
+      ${opt.option_text}
+    </div>
+  `;
+});
 
   
-  if (currentIndex !== quizData.length - 1) {
-    html += `
-      <button id="nextBtn" class="btn btn-primary mt-3">
-        Next
-      </button>
-    `;
-  }
+ if (currentIndex !== quizData.length - 1) {
+  html += `
+    <button id="nextBtn" class="btn btn-primary mt-3">Next</button>
+  `;
+} else {
+  html += `
+    <button id="finishBtn" class="btn btn-success mt-3">Finish</button>
+  `;
+}
+
 
   $("#quizBody").html(html);
 }
 
 $(document).on("click", "#nextBtn", function () {
-  let selected = $("input[name='question']:checked").val();
+  let qid = quizData[currentIndex].id;
+  let selected = $(`input[name='question${qid}']:checked`).val();
 
   if (!selected) {
     Swal.fire("Warning", "Please select an option!", "warning");
     return;
   }
 
-  answers[quizData[currentIndex].id] = selected;
-
+  answers[qid] = selected;
   currentIndex++;
 
   if (currentIndex < quizData.length) {
     renderQuestion();
   } else {
     console.log("Final Answers:", answers);
-
     Swal.fire("Done", "Quiz submitted successfully!", "success");
-
   }
 });
+$(document).on("click", "#finishBtn", function () {
+  let qid = quizData[currentIndex].id;
+  let selected = $(`input[name='question${qid}']:checked`).val();
+
+  if (!selected) {
+    Swal.fire("Warning", "Please select an option!", "warning");
+    return;
+  }
+
+  answers[qid] = selected;
+  console.log("Final Answers:", answers);
+  submitQuiz(); 
+});
+
+
 
   function startTimer() {
     clearInterval(timerInterval);
@@ -379,75 +396,65 @@ $(document).on("click", "#nextBtn", function () {
     }, 1000);
   }
 
-  $(document).on("click", "#submitQuiz", function () {
-    clearInterval(timerInterval);
-    submitQuiz();
-  });
 
-  function submitQuiz() {
-    let answers = [];
+function submitQuiz() {
+  
+  let answersArray = Object.entries(answers).map(([qid, oid]) => ({
+    question_id: parseInt(qid),
+    option_id: parseInt(oid),
+  }));
 
-    $("#quizBody input:checked").each(function () {
-      answers.push({
-        question_id: $(this).data("question"),
-        option_id: parseInt($(this).val()),
-      });
-    });
-
-    if (!answers.length) {
-      Swal.fire("Warning", "Answer at least one question", "warning");
-      return;
-    }
-
-    let startedAt = $("#quizModal").attr("data-started-at");
-
-    $.ajax({
-      type: "POST",
-      url: "./api/php-scripts/submitQuiz.php",
-      contentType: "application/json",
-      dataType: "json",
-      headers: { Authorization: "Bearer " + token },
-      data: JSON.stringify({
-        quiz_id: currentQuizId,
-        answers,
-        started_at: startedAt,
-      }),
-
-      success: function (res) {
-        if (!res.status) {
-          Swal.fire("Error", res.message, "error");
-          return;
-        }
-
-        let data = res.data;
-
-        Swal.fire("Success", "Quiz submitted", "success");
-        $("#quizModal").modal("hide");
-
-        let card = $(`.quiz-card[data-id="${data.quiz_id}"]`);
-
-        card.find(".quiz-result").html(`
-          <div class="alert alert-success p-2 mt-2">
-            <div><b>Score:</b> ${data.obtained_marks}/${data.total_marks}</div>
-            <div><b>Attempts:</b> ${data.attempts_count}</div>
-          </div>
-        `);
-
-        card
-          .find(".startQuiz")
-          .removeClass("btn-primary")
-          .addClass("btn-outline-primary")
-          .html(`<i class="bi bi-arrow-repeat"></i> Re-attempt`);
-
-        loadLastAttempt();
-      },
-
-      error: function (err) {
-        console.log(err.responseText);
-        Swal.fire("Error", "Submission failed", "error");
-      },
-    });
+  if (!answersArray.length) {
+    Swal.fire("Warning", "Answer at least one question", "warning");
+    return;
   }
+
+  let startedAt = $("#quizModal").attr("data-started-at");
+
+  $.ajax({
+    type: "POST",
+    url: "./api/php-scripts/submitQuiz.php",
+    contentType: "application/json",
+    dataType: "json",
+    headers: { Authorization: "Bearer " + token },
+    data: JSON.stringify({
+      quiz_id: currentQuizId,
+      answers: answersArray,
+      started_at: startedAt,
+    }),
+    success: function (res) {
+      if (!res.status) {
+        Swal.fire("Error", res.message, "error");
+        return;
+      }
+
+      let data = res.data;
+      Swal.fire("Success", "Quiz submitted", "success");
+      $("#quizModal").modal("hide");
+
+      let card = $(`.quiz-card[data-id="${data.quiz_id}"]`);
+      card.find(".quiz-result").html(`
+        <div class="alert alert-success p-2 mt-2">
+          <div><b>Score:</b> ${data.obtained_marks}/${data.total_marks}</div>
+          <div><b>Attempts:</b> ${data.attempts_count}</div>
+        </div>
+      `);
+
+      card.find(".startQuiz")
+        .removeClass("btn-primary")
+        .addClass("btn-outline-primary")
+        .html(`<i class="bi bi-arrow-repeat"></i> Re-attempt`);
+
+      loadLastAttempt();
+    },
+    error: function (err) {
+      console.log(err.responseText);
+      Swal.fire("Error", "Submission failed", "error");
+    },
+  });
+}
+
+
 
   function autoSubmitQuiz() {
     Swal.fire("Time Up", "Auto submitting...", "info");

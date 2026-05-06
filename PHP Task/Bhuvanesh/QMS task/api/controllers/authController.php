@@ -613,20 +613,18 @@ class authController {
 
         $attemptId = $attempt['id'];
 
-
         foreach ($answers as $ans) {
-
         if (!isset($ans['question_id'], $ans['option_id'])) continue;
 
         $insertAnswer = "INSERT INTO answers(attempt_id, question_id, option_id)
-                         VALUES(:aid, :qid, :oid)";
-
+                     VALUES(:aid, :qid, :oid)";
         $this->db->query($insertAnswer)->create([
-            ":aid" => $attemptId,
-            ":qid" => (int)$ans['question_id'],
-            ":oid" => (int)$ans['option_id']
+        ":aid" => $attemptId,
+        ":qid" => (int)$ans['question_id'],
+        ":oid" => (int)$ans['option_id']
         ]);
         }
+
 
     
         $scoreQuery = "SELECT COALESCE(SUM(q.marks),0) AS score
